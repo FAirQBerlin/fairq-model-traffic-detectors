@@ -1,0 +1,26 @@
+Package: fairqModelTrafficDetectors
+Title: Predict traffic
+Version: 23.12.1
+Authors@R: 
+    person("Mira Celine", "Klein", , "mira.klein@inwt-statistics.de", role = c("aut", "cre"))
+Description: Predict traffic intensity using data by traffic detectors.
+License: file LICENSE
+Depends:
+    R (>= 4.2.0)
+Imports:
+    dplyr (>= 1.0.8),
+    fairqDbtools (>= 23.01.0),
+    futile.logger (>= 1.4.3),
+    ggplot2 (>= 3.3.6),
+    rlang (>= 1.0.2),
+    rjson (>= 0.2.21),
+    timeDate (>= 3043.102),
+    tidyselect (>= 1.1.2)
+Suggests: 
+    INWTUtils (>= 1.1.0),
+    lintr (>= 3.0.0),
+    testthat (>= 3.1.3)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+Config/testthat/edition: 3

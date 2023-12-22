@@ -1,0 +1,10 @@
+.Rproj.user
+.Rhistory
+*.RData
+.Ruserdata
+.Renviron*
+.ipynb_checkpoints
+.idea
+*.csv
+.Renviron_dev
+.Renviron_prod

@@ -1,0 +1,8 @@
+DB_HOST=[host, unquoted]
+DB_PORT=9000
+DB_USERNAME=[username, unquoted]
+DB_PASSWORD=[pw, unquoted]
+DB_SCHEMA_SOURCE=[schema_source, unquoted]
+DB_SCHEMA_TARGET=[schema-target, unquoted]
+DEV=[TRUE or FALSE]
+

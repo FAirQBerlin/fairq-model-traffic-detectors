@@ -1,0 +1,13 @@
+^.+\.Rproj$
+^\.Rproj\.user$
+^reports$
+^kubernetes$
+^\.dockerignore$
+^Dockerfile$
+^Jenkinsfile$
+^\.Renviron
+^lib$
+^input_data$
+.\.csv$
+^lib$
+.\.RData$

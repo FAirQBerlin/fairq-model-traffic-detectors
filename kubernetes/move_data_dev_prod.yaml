@@ -1,0 +1,60 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: traffic-model-etl-move-data-to-prod
+  namespace: service-fairq
+spec:
+  schedule: 0 0 31 2 * #never
+  suspend: true
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - image: registry.core.inwt.de/fairq-model-traffic-detectors:$TAG
+            imagePullPolicy: Always
+            name: fairq-model-traffic-detectors
+            command: ["Rscript", "inst/RScripts/06_move_data_dev_prod.R"]
+            resources:
+              requests:
+                memory: "175Mi"
+                cpu: "0.1"
+              limits:
+                memory: "250Mi"
+                cpu: "1"
+            env:
+              - name: DB_HOST
+                valueFrom:
+                  secretKeyRef:
+                    name: traffic-model-etl
+                    key: db_host
+              - name: DB_PORT
+                valueFrom:
+                  secretKeyRef:
+                    name: traffic-model-etl
+                    key: db_port
+              - name: DB_USERNAME
+                valueFrom:
+                  secretKeyRef:
+                    name: traffic-model-etl
+                    key: db_username
+              - name: DB_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: traffic-model-etl
+                    key: db_password
+              - name: DB_SCHEMA_SOURCE
+                valueFrom:
+                  secretKeyRef:
+                    name: traffic-model-etl
+                    key: db_schema_source
+              - name: DB_SCHEMA_TARGET
+                valueFrom:
+                  secretKeyRef:
+                    name: traffic-model-etl
+                    key: db_schema_target
+          restartPolicy: Never
+          imagePullSecrets:
+          - name: core-registry-secret
