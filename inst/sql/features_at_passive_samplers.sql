@@ -38,5 +38,5 @@ left join
   fairq_features.buildings on (coords_passive_samplers.stadt_x = buildings.x and coords_passive_samplers.stadt_y = buildings.y)  -- Todo use correct table
 cross join
   fairq_features.features_date_time dt
-where dt.date_time >= '2022-01-01 00:00:00'
-  and dt.date_time < '2023-01-01 00:00:00'
+where dt.date_time >= '2020-01-01 00:00:00'
+  and dt.date_time < '2024-01-01 00:00:00'

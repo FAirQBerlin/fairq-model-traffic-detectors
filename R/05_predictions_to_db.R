@@ -104,33 +104,36 @@ add_model_id <- function(model_descr) {
 
 #' Retrieve data, make predictions, write them to DB
 #'
-#' @param query_features (string) name of the query to retrieve the features
+#' @param query (string) name of the query to retrieve the feature data
 #' @param xgb_fit A model object from XGBoost
+#' @param target_variable (string) name of the target variable
 #' @param model_id (int) Model ID of the model we use
 #' @param table_name (string) Name of the table where the predictions are sent
 #' @param database (string) name of database schema the data is sent to
 #' @return Nothing
 #' @export
 preds_to_db <-
-  function(query_features,
+  function(query,
            xgb_fit,
+           target_variable,
            model_id,
            table_name,
            database = Sys.getenv("DB_SCHEMA_TARGET")) {
-    logging("Retrieving data for %s", query_features)
-    features <- send_query(query_features)
+    logging("Retrieving data for %s", query)
+    dat <- send_query(query)
     gc()
-    logging("Making predictions for %s observations.", nrow(features))
-    features$value <- predict(xgb_fit, features)
+    logging("Making predictions for %s observations.", nrow(dat))
+    dat$value <- make_predictions(xgb_fit, dat, target_variable)
     gc()
-    features <- prep_preds_for_db(features, model_id = model_id)
+    dat <- prep_preds_for_db(dat, model_id = model_id)
+    DEV <- Sys.getenv("DEV")
     if (!as.logical(DEV)) {
-      send_data(df = features,
+      send_data(df = dat,
                 table = table_name,
                 database = database,
                 mode = "replace")
     }
-    rm(features)
+    rm(dat)
     gc()
   }
 
@@ -141,19 +144,21 @@ preds_to_db <-
 #' Uses mode insert and optimizes table only once at the end to save time
 #'
 #' @param chunk_size (int) Size of the chunks, i.e., how many x coordinates are processed at once
-#' @param query_features (string) name of the query to retrieve the features,
+#' @param query (string) name of the query to retrieve the feature data,
 #' must be a query that takes the parameter x to filter the data on a specific x
 #' coordinate. If the query is not parametrized by x, but retrieves all data at once,
 #' use the function preds_to_db() instead of this one.
 #' @param xgb_fit A model object from XGBoost
 #' @param model_id (int) Model ID of the model we use
+#' @param target_variable (string) name of the target variable
 #' @param table_name (string) Name of the table where the predictions are sent
 #' @return Nothing
 #' @export
 preds_chunkwise_to_db <-
   function(chunk_size,
-           query_features,
+           query,
            xgb_fit,
+           target_variable,
            model_id,
            table_name) {
     x_coords <- send_query("distinct_x_coords")$x
@@ -167,17 +172,18 @@ preds_chunkwise_to_db <-
         length(chunks),
         x
       )
-      dat_x <- send_query(query_features, x_coords = x)
+      dat_x <- send_query(query, x_coords = x)
       gc()
 
       logging("Making predictions for chunk %s of %s",
               chunk_number,
               length(chunks))
-      dat_x$value <- predict(xgb_fit, dat_x)
+      dat_x$value <- make_predictions(xgb_fit, dat_x, target_variable)
       gc()
 
       dat_x <- prep_preds_for_db(dat_x, model_id = model_id)
 
+      DEV <- Sys.getenv("DEV")
       if (!as.logical(DEV)) {
         # Use mode insert now and optimize table only once at the end
         send_data(
@@ -199,6 +205,69 @@ preds_chunkwise_to_db <-
                          database = Sys.getenv("DB_SCHEMA_SOURCE"))
     logging("Done <3")
   }
+
+#' Send model object to database
+#'
+#' @param model_object A final model object from XGBoost, e.g. xgb_fit$finalModel
+#' @param model_id (int) Model ID of the model we use
+#' @param model_filename (string) model filename, model.xgb by default
+#' @param delete_local_copy (logical) delete local copy of the model file after
+#' sending it to the DB, TRUE by default
+#'
+#' @export
+send_model_to_db <-
+  function(model_object,
+           model_id,
+           model_filename = "model.xgb",
+           delete_local_copy = TRUE) {
+    on.exit(if (delete_local_copy)
+      unlink(model_filename))
+    xgb.save(model_object, model_filename)
+    model_bin_send <-
+      readBin(model_filename, "raw", file.info(model_filename)$size)
+    model_base64_send <- base64encode(model_bin_send)
+
+    # load in database
+    df <- data.frame(model_id = model_id,
+                     model_object = model_base64_send)
+
+    logging("Sending model object with model_id %s to database", model_id)
+    send_data(df,
+              "traffic_model_object",
+              database = Sys.getenv("DB_SCHEMA_SOURCE"),
+              mode = "replace")
+  }
+
+#' Retrieve model object from database
+#'
+#' @param model_id (int) Model ID of the model we use
+#' @return model object
+#'
+#' @export
+retrieve_model_from_db <- function(model_id) {
+  on.exit(unlink(temp_model_path))
+  model_base64_retrieved <- send_query("model_object", model_id = model_id)$model_object
+  model_bin_retrieved <- base64decode(model_base64_retrieved)
+  temp_model_path <- tempfile()
+  writeBin(model_bin_retrieved, temp_model_path)
+  model_object <- xgb.load(temp_model_path)
+  model_object
+}
+
+#' Retrieve latest model ID from database
+#'
+#' @param target_variable (string) name of the target variable: q_kfz or v_kfz
+#' @return latest model ID with available model_object
+#'
+#' @export
+get_latest_model_id <- function(target_variable) {
+  stopifnot(target_variable %in% c("q_kfz", "v_kfz"))
+  model_id <- send_query("latest_model_id", target_variable = target_variable)$model_id
+  if (model_id == 0)
+    stop(sprintf("No model found for %s", target_variable))
+  model_id
+}
+
 
 
 #' Divide a vector into chunks and format them as comma-separated strings

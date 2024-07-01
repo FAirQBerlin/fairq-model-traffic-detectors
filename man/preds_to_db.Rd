@@ -5,17 +5,20 @@
 \title{Retrieve data, make predictions, write them to DB}
 \usage{
 preds_to_db(
-  query_features,
+  query,
   xgb_fit,
+  target_variable,
   model_id,
   table_name,
   database = Sys.getenv("DB_SCHEMA_TARGET")
 )
 }
 \arguments{
-\item{query_features}{(string) name of the query to retrieve the features}
+\item{query}{(string) name of the query to retrieve the feature data}
 
 \item{xgb_fit}{A model object from XGBoost}
+
+\item{target_variable}{(string) name of the target variable}
 
 \item{model_id}{(int) Model ID of the model we use}
 

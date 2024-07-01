@@ -1,3 +1,20 @@
+#' Make predictions using a given model object
+#'
+#' @description Make predictions using a given model object, e.g., from the database
+#' @param model_object a single xgb model_object, e.g. xgb_fit$final model or
+#' an model object, retrieved from the database with retrieve_model_from_db()
+#' @param dat data frame with the features
+#' @param target_variable (character) "q_kfz" or v_kfz"
+#'
+#' @return vector of predictions
+#' @export
+make_predictions <- function(model_object, dat, target_variable){
+  feature_names <- labels(terms(model_formula(target_variable)))
+  dat <- xgb.DMatrix(data = as.matrix(as.data.frame(dat)[, feature_names]))
+  predict(model_object, dat)
+}
+
+
 #' Latest model formula
 #'
 #' @param target_variable (character) "q_kfz" for counted traffic of all

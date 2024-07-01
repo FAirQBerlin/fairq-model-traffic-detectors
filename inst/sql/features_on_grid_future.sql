@@ -39,5 +39,5 @@ left join
 cross join
   fairq_features.features_date_time dt
 where dt.date_time >= date_add(DAY,  -1, today())
-  and dt.date_time <= date_add(WEEK, 16, today())
+  and dt.date_time <= date_add(WEEK, 5, today())
   and x in ({{ x_coords }});

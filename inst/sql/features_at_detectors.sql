@@ -1,7 +1,3 @@
-with latest_traffic_date as (
-select max(date_time) max_traffic_date from fairq_output.traffic_model_predictions_temporal_cv
-)
-
 select
   dt.date_time date_time,
 	toDayOfWeek(dt.date_time) day_of_week,
@@ -47,8 +43,5 @@ left join
 cross join
   fairq_features.features_date_time dt
 -- Query data from the last prediction in the target table until 12 weeks after today
-cross join
- latest_traffic_date
-where dt.date_time > latest_traffic_date.max_traffic_date
-  and dt.date_time <= date_add(WEEK, 12, today())
+where dt.date_time <= date_add(WEEK, 5, today())
 order by x, y, date_time desc;

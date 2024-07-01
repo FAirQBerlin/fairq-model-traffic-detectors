@@ -24,10 +24,11 @@ the data that will be used in the dev mode, in order to save time.
 hyperparameters and uses a time split to compute model performance metrics.
 - `inst/RScripts/03_spatial_cv.R`: This script computes model performance 
 metrics based on a spatial split.
--  `inst/RScripts/04_calibrate_model_and_make_predictions.R`: This script fits 
-the model on complete data and makes predictions on various datasets (see below 
-for details).
-- `inst/RScripts/05_shap.R`: This script loads a model stored in script 04 and 
+-  `inst/RScripts/04_calibrate_model.R`: This script trains 
+the model on complete data and save the model objekt on the database.
+-  `inst/RScripts/05_make_predictions.R`: This script makes predictions on 
+various datasets (see below for details).
+- `inst/RScripts/06_shap.R`: This script loads a model stored in script 04 and 
 generates Shapley plots, which show variable importance and the shape of 
 relationships.
 
@@ -58,7 +59,7 @@ Traffic data arrives monthly as a csv file on https://api.viz.berlin.de/daten/ve
   - d.) Predictions on entire Berlin grid for year 2019 and based on that, calculation of rescaling factors using traffic volume map
 3. Calculate new predictions for vehicle speed on dev using script https://github.com/fairqBerlin/fairq-model-traffic-detectors/blob/public/inst/RScripts/04_calibrate_model_and_make_predictions.R (predictions for 2019 are not created for speed because we don't need rescaling for it)
 4. Retrigger Kubernetes job for pollutant model training (dev)
-5. Transfer traffic model predictions to prod using `inst/R_Code/06_move_data_dev_prod` after checking that it's working on dev
+5. Transfer traffic model predictions to prod using `inst/R_Code/07_move_data_dev_prod` after checking that it's working on dev
 6. Retrigger Kubernetes job for pollutant model training (prod)
 
 

@@ -39,4 +39,4 @@ left join
 cross join
   fairq_features.features_date_time dt
 where dt.date_time >= '2015-01-01'
-  and dt.date_time <= date_add(WEEK, 16, now());
+  and dt.date_time <= date_add(WEEK, 5, now());

@@ -6,8 +6,9 @@
 \usage{
 preds_chunkwise_to_db(
   chunk_size,
-  query_features,
+  query,
   xgb_fit,
+  target_variable,
   model_id,
   table_name
 )
@@ -15,12 +16,14 @@ preds_chunkwise_to_db(
 \arguments{
 \item{chunk_size}{(int) Size of the chunks, i.e., how many x coordinates are processed at once}
 
-\item{query_features}{(string) name of the query to retrieve the features,
+\item{query}{(string) name of the query to retrieve the feature data,
 must be a query that takes the parameter x to filter the data on a specific x
 coordinate. If the query is not parametrized by x, but retrieves all data at once,
 use the function preds_to_db() instead of this one.}
 
 \item{xgb_fit}{A model object from XGBoost}
+
+\item{target_variable}{(string) name of the target variable}
 
 \item{model_id}{(int) Model ID of the model we use}
 
