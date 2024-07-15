@@ -165,6 +165,7 @@ preds_chunkwise_to_db <-
     chunks <- comma_separated_chunks(x_coords, chunk_size)
     logging("Divided data into %s chunks", length(chunks))
     chunk_number <- 1
+    start_time <- Sys.time()
     for (x in chunks) {
       logging(
         "Retrieving data for chunk %s of %s (coordinates %s)",
@@ -172,7 +173,7 @@ preds_chunkwise_to_db <-
         length(chunks),
         x
       )
-      dat_x <- send_query(query, x_coords = x)
+      dat_x <- send_query(query, x_coords = x, start_time = start_time)
       gc()
 
       logging("Making predictions for chunk %s of %s",
@@ -204,6 +205,7 @@ preds_chunkwise_to_db <-
     optimize_table_final(table = table_name,
                          database = Sys.getenv("DB_SCHEMA_SOURCE"))
     logging("Done <3")
+    return(start_time)
   }
 
 #' Send model object to database

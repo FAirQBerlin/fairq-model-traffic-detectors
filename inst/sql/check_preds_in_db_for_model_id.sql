@@ -1,9 +1,5 @@
-select count(*) in (
-24 * 36 * 360765 + 360765, -- normal
-24 * 36 * 360765 + 2 * 360765, -- summer time to winter time -> one hour more
-24 * 36 * 360765 -- winter time to summer time -> one hour less
-) as all_preds_arrived
--- full, cropped Berlin raster has 360765 cells; 24 hours; 5 weeks + yesterday = 113 days; plus current hour
--- at time change: 1 hour more or less
-from traffic_model_predictions_grid
-where model_id = {{model_id}};
+select count(*) as n_preds
+from traffic_model_predictions_grid final
+where model_id = {{model_id}}
+and date_time >= '{{start_time}}' - interval 1 DAY
+and date_time <= date_add(WEEK, 5, '{{start_time}}');

@@ -38,6 +38,6 @@ left join
   fairq_features.buildings on (stadt.x = buildings.x and stadt.y = buildings.y)
 cross join
   fairq_features.features_date_time dt
-where dt.date_time >= date_add(DAY,  -1, today())
-  and dt.date_time <= date_add(WEEK, 5, today())
+where dt.date_time > '{{start_time}}' - interval 1 DAY
+  and dt.date_time <= date_add(WEEK, 5, '{{start_time}}')
   and x in ({{ x_coords }});

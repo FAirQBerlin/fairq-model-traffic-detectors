@@ -33,7 +33,7 @@ preds_to_db(
 
 ## c.) Predictions on whole grid for the next 16 weeks - we need them as input
 ## for the pollutant model to make predictions on the whole grid
-preds_chunkwise_to_db(
+start_time <- preds_chunkwise_to_db(
   chunk_size = 10,
   query = "features_on_grid_future",
   xgb_fit = xgb_fit_final,
@@ -45,8 +45,13 @@ preds_chunkwise_to_db(
 # Check if the correct number of rows for this model ID arrived in DB
 preds_model_id_in_db <- send_query("check_preds_in_db_for_model_id",
                                    model_id = model_id,
+                                   start_time = start_time,
                                    database = Sys.getenv("DB_SCHEMA_SOURCE"))
-if (!as.logical(preds_model_id_in_db$all_preds_arrived)) {
+
+actual_count <- preds_model_id_in_db$n_preds
+if (actual_count != 24*36*360765 && # normal
+    actual_count != 24*36*360765 + 360765 && # summer -> winter
+    actual_count != 24*36*360765 - 360765) { # winter -> summer
   stop("It seems that not all grid predictions have arrived correctly in the DB.")
 }
 
