@@ -27,16 +27,16 @@ select
 	buildings.height building_height,
 	traffic_vol.kfz_per_24h traffic_volume
 from
-  fairq_features.coord_mapping_stadt_station coords_stations
+  coord_mapping_stadt_station coords_stations
 left join
-  fairq_features.streets str on (coords_stations.stadt_x = streets.x and coords_stations.stadt_y = streets.y)
+  streets str on (coords_stations.stadt_x = streets.x and coords_stations.stadt_y = streets.y)
 left join
-  fairq_features.land_use land on (coords_stations.stadt_x = land.x and coords_stations.stadt_y = land.y)
+  land_use land on (coords_stations.stadt_x = land.x and coords_stations.stadt_y = land.y)
 left join
-  fairq_features.traffic_volume traffic_vol on (coords_stations.stadt_x = traffic_vol.x and coords_stations.stadt_y = traffic_vol.y)
+  traffic_volume traffic_vol on (coords_stations.stadt_x = traffic_vol.x and coords_stations.stadt_y = traffic_vol.y)
 left join
-  fairq_features.buildings on (coords_stations.stadt_x = buildings.x and coords_stations.stadt_y = buildings.y)
+  buildings on (coords_stations.stadt_x = buildings.x and coords_stations.stadt_y = buildings.y)
 cross join
-  fairq_features.features_date_time dt
+  features_date_time dt
 where dt.date_time >= '2015-01-01'
   and dt.date_time <= date_add(WEEK, 5, now());

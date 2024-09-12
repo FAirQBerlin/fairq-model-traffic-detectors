@@ -40,7 +40,7 @@ select
 	lon,
 	lat) as dist
 from
-	fairq_features.coord_mapping_stadt_reprojection
+	coord_mapping_stadt_reprojection
 cross join
   coord_kfz_counts
 ),
@@ -69,7 +69,7 @@ select
 from
 	grid_cells_with_counting
 left join
- fairq_features.coord_mapping_stadt_streets cmss on
+ coord_mapping_stadt_streets cmss on
 	x = stadt_x
 	and y = stadt_y
 left join
@@ -96,7 +96,7 @@ select
 from
 	all_element_nr
 left join
-fairq_features.coord_mapping_stadt_streets on
+coord_mapping_stadt_streets on
 	cmss.element_nr = element_nr
 where
 	strname_match = 1
@@ -121,7 +121,7 @@ select
 	y,
 	value as pred
 from
-	fairq_features.traffic_model_predictions_grid
+	traffic_model_predictions_grid
 where
 	toDate(date_time) in ('2023-05-04', '2023-06-28')
 	and model_id = 21
@@ -130,45 +130,45 @@ where
 
 
 create temporary table scaled_preds_2022 as (
-select 
+select
   date_time,
   x ,
   y,
  toNullable(scaling * pred) as pred
-from 
+from
  unscaled_preds_2022
-inner join 
+inner join
  fairq_features_jan.traffic_model_scaling using(x, y)
 );
 
 create temporary table scaled_preds_2023 as (
-select 
+select
   date_time,
   x ,
   y,
  toNullable(scaling * pred) as pred
-from 
+from
  unscaled_preds_2023
-inner join 
+inner join
  traffic_model_scaling using(x, y)
 );
 
 
 create temporary table scaled_preds as (
-select 
+select
   date_time,
   x ,
   y,
   pred
-from 
+from
 scaled_preds_2022
-union all 
-select 
+union all
+select
   date_time,
   x ,
   y,
   pred
-from 
+from
 scaled_preds_2023
 );
 

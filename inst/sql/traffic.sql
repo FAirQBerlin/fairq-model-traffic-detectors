@@ -7,7 +7,7 @@ select
   x det_x,
   y det_y
 from
-  fairq_features.traffic_det
+  traffic_det
 )
 select
   det.mq_name mq_name,
@@ -45,16 +45,16 @@ select
 from
 	det_observations det
 left join
-  fairq_features.features_date_time fdt on (fdt.date_time = det.date_time)
+  features_date_time fdt on (fdt.date_time = det.date_time)
 -- add closest stadstruktur coordinates and data
 left join
-  fairq_features.coord_mapping_stadt_det cmsd on (det.det_x = cmsd.det_x and det.det_y = cmsd.det_y)
+  coord_mapping_stadt_det cmsd on (det.det_x = cmsd.det_x and det.det_y = cmsd.det_y)
 left join
-  fairq_features.streets str on (stadt_x = str.x and stadt_y = str.y)
+  streets str on (stadt_x = str.x and stadt_y = str.y)
 left join
-  fairq_features.land_use land on (stadt_x = land.x and stadt_y = land.y)
+  land_use land on (stadt_x = land.x and stadt_y = land.y)
 left join
-  fairq_features.traffic_volume traffic_vol on (stadt_x = traffic_vol.x and stadt_y = traffic_vol.y)
+  traffic_volume traffic_vol on (stadt_x = traffic_vol.x and stadt_y = traffic_vol.y)
 left join
-  fairq_features.buildings on (stadt_x = buildings.x and stadt_y = buildings.y)
+  buildings on (stadt_x = buildings.x and stadt_y = buildings.y)
 order by date_time, x, y;

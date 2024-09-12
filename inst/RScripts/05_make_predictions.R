@@ -4,9 +4,12 @@
 
 library(fairqModelTrafficDetectors)
 library(fairqDbtools)
+sessionInfo()
 
 target_variable <- Sys.getenv("TARGET_VARIABLE", "q_kfz") # or v_kfz
 model_id = get_latest_model_id(target_variable)
+
+logging("Start making predictions with model_id=%s and target_variable=%s", model_id, target_variable)
 
 xgb_fit_final <- retrieve_model_from_db(model_id)
 
@@ -92,5 +95,5 @@ if (target_variable == "q_kfz") {
   }
 }
 
-# after some time: put the new predictions to production:
-# script is in 07_move_data_dev_prod
+
+logging("Finished making predictions :-)")

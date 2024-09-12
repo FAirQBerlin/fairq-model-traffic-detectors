@@ -27,16 +27,16 @@ select
 	buildings.height building_height,
 	traffic_vol.kfz_per_24h traffic_volume
 from
-  fairq_features.coord_stadt_berlin stadt
+  coord_stadt_berlin stadt
 left join
-  fairq_features.streets str on (stadt.x = streets.x and stadt.y = streets.y)
+  streets str on (stadt.x = streets.x and stadt.y = streets.y)
 left join
-  fairq_features.land_use land on (stadt.x = land.x and stadt.y = land.y)
+  land_use land on (stadt.x = land.x and stadt.y = land.y)
 left join
-  fairq_features.traffic_volume traffic_vol on (stadt.x = traffic_vol.x and stadt.y = traffic_vol.y)
+  traffic_volume traffic_vol on (stadt.x = traffic_vol.x and stadt.y = traffic_vol.y)
 left join
-  fairq_features.buildings on (stadt.x = buildings.x and stadt.y = buildings.y)
+  buildings on (stadt.x = buildings.x and stadt.y = buildings.y)
 cross join
-  fairq_features.features_date_time dt
+  features_date_time dt
 where year = 2019
 and x in ({{ x_coords }});

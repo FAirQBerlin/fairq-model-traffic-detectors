@@ -90,7 +90,7 @@ add_model_id <- function(model_descr) {
 
   if (is.null(model_id_db[[1]])) {
     model_descr$model_id <-
-      send_query("next_model_id", database = Sys.getenv("DB_SCHEMA_TARGET"),)$model_id
+      send_query("next_model_id", database = Sys.getenv("DB_SCHEMA_TARGET"))$model_id
     logging("Model is new, so a new ID is created (ID %s)",
             model_descr$model_id)
   } else {
@@ -264,7 +264,14 @@ retrieve_model_from_db <- function(model_id) {
 #' @export
 get_latest_model_id <- function(target_variable) {
   stopifnot(target_variable %in% c("q_kfz", "v_kfz"))
-  model_id <- send_query("latest_model_id", target_variable = target_variable)$model_id
+  model_id <- send_query(
+    "latest_model_id",
+    target_variable = target_variable,
+    env = env$db())$model_id   
+    # we need the env param here as "latest_model_id" is the only query getting data from 
+    # two databases (fairq_features and fairq_output). fairq_features (DEV) or fairq_prod_features (PROD)
+    # will be controlle by the DB_SCHEMA_SOURCE in .Renviron. For fairq_output the env parameter will 
+    # control the switch to fairq_prod_output. 
   if (model_id == 0)
     stop(sprintf("No model found for %s", target_variable))
   model_id
