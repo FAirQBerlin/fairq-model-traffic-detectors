@@ -6,7 +6,12 @@ library(fairqModelTrafficDetectors)
 library(fairqDbtools)
 sessionInfo()
 
-target_variable <- Sys.getenv("TARGET_VARIABLE", "q_kfz") # or v_kfz
+args <- R.utils::commandArgs(
+  trailingOnly = TRUE,
+  asValues = TRUE,
+  defaults = list(TARGET_VARIABLE="q_kfz") # or v_kfz
+)
+target_variable <- args$TARGET_VARIABLE
 model_id = get_latest_model_id(target_variable)
 
 logging("Start making predictions with model_id=%s and target_variable=%s", model_id, target_variable)

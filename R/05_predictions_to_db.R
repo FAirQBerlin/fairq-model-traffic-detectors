@@ -13,6 +13,8 @@ prep_preds_for_db <-
     df %>%
       mutate(model_id = model_id,
              value = round(.data$value, 0)) %>%
+      mutate(value = ifelse(.data$value > 65535, 65535, .data$value)) %>%
+      mutate(value = ifelse(.data$value < 0, 0, .data$value)) %>%
       select(any_of(c(
         "model_id", "date_time", "x", "y", "value"
       )))
@@ -267,11 +269,11 @@ get_latest_model_id <- function(target_variable) {
   model_id <- send_query(
     "latest_model_id",
     target_variable = target_variable,
-    env = env$db())$model_id   
-    # we need the env param here as "latest_model_id" is the only query getting data from 
+    env = env$db())$model_id
+    # we need the env param here as "latest_model_id" is the only query getting data from
     # two databases (fairq_features and fairq_output). fairq_features (DEV) or fairq_prod_features (PROD)
-    # will be controlle by the DB_SCHEMA_SOURCE in .Renviron. For fairq_output the env parameter will 
-    # control the switch to fairq_prod_output. 
+    # will be controlle by the DB_SCHEMA_SOURCE in .Renviron. For fairq_output the env parameter will
+    # control the switch to fairq_prod_output.
   if (model_id == 0)
     stop(sprintf("No model found for %s", target_variable))
   model_id
