@@ -18,7 +18,9 @@ library(Metrics)
 library(parallel)
 library(xgboost)
 
-set.seed(364)
+sessionInfo()
+
+set.seed(9127364)
 
 args <- R.utils::commandArgs(
   trailingOnly = TRUE,
@@ -59,7 +61,7 @@ xgb_fit <- xgb.train(
 # Save model results ----
 # So we can load them in another file and look at variable importance or make
 # predictions
-file_prefix <- paste0(format(Sys.Date(), "%y%m%d"), "_", target_variable, "_")
+file_prefix <- paste0(format(Sys.Date(), "%y%m%d"), "_", target_variable)
 file_suffix <- if (DEV) "_dev" else ""
 model_filename <- paste0(file_prefix,
                                  "traffic_model_full_period",
@@ -84,9 +86,14 @@ model_descr <- model_description_for_db(
 model_id <- model_descr$model_id
 
 send_data(model_descr, "traffic_model_description", mode = "replace")
+logging("Model description sent to DB for model_id %s", model_id)
 
 if (DEV){ # save DEV models locally
   xgb.save(xgb_fit, fname = model_filename)
+  logging("Model saved locally with filename %s", model_filename)
 } else { # save model to DB
   send_model_to_db(xgb_fit, model_id, model_filename)
+  logging("Model saved to DB for model_id %s", model_id)
 }
+
+logging("Model calibration done")
