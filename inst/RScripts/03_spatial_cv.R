@@ -13,6 +13,7 @@ library(ggplot2)
 library(ggrepel)
 library(Metrics)
 library(parallel)
+library(xgboost)
 
 set.seed(109385)
 
@@ -29,7 +30,8 @@ target_variable <- "q_kfz"
 # Get data ----
 dat <- get_data(target_variable, DEV, frac_if_dev)
 scaling_factors <- send_query("scaling_factors_at_detectors")
-
+formula <- model_formula(target_variable)
+features <- labels(terms(formula))
 # Split data and train model ----
 n_splits <- ifelse(DEV, 2, 5)
 groups <- dat %>%
@@ -40,6 +42,9 @@ dat <- dat %>%
   left_join(groups, by = "mq_name") %>%
   left_join(scaling_factors, by = c("x", "y"))
 
+optimal_hyperparams <- jsonlite::fromJSON(sprintf("inst/params/optimal_hyperparams_%s.json", target_variable))
+# optimal_hyperparams$nrounds <- NULL
+
 result_list <- lapply(1:n_splits,
                       function(id) {
                         # Split data
@@ -48,21 +53,23 @@ result_list <- lapply(1:n_splits,
                         dat_test <-
                           dat %>% filter(group == id)
 
+                        dtrain <- make_DMatrix(dat_train, features, target_variable)
+                        dtest <- make_DMatrix(dat_test, features, target_variable)
+
                         # Train model
-                        xgb_fit <- train(
-                          form = model_formula(target_variable),
-                          data = dat_train,
-                          method = "xgbTree",
-                          tuneGrid = optimal_hyper_parameters(target_variable),
-                          reg_lambda = optimal_lambda(target_variable),
-                          trControl = trainControl("none", predictionBounds = c(0, NA)),
-                          verbose = TRUE,
-                          nthread = detectCores() - 1
+                        xgb_fit <- xgb.train(
+                          params = optimal_hyperparams,
+                          nrounds = optimal_hyperparams$nrounds,
+                          data = dtrain,
+                          verbose = 1,
+                          early_stopping_rounds = 20
                         )
 
                         # Make predictions
-                        dat_test$pred <-
-                          predict(xgb_fit, dat_test)
+                        dat_test$pred <- predict(xgb_fit, dtest)
+
+                        # Apply prediction bounds
+                        dat_test$pred[dat_test$pred < 0] <- 0
                         dat_test
                       })
 

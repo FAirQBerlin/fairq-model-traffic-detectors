@@ -57,4 +57,5 @@ left join
   traffic_volume traffic_vol on (stadt_x = traffic_vol.x and stadt_y = traffic_vol.y)
 left join
   buildings on (stadt_x = buildings.x and stadt_y = buildings.y)
+where det.date_time > '2019-01-01'
 order by date_time, x, y;

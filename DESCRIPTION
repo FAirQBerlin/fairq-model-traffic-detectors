@@ -9,17 +9,19 @@ Depends:
     R (>= 4.3.0)
 Imports:
     base64enc (>= 0.1),
+    caret (>= 6.0.0),
     dplyr (>= 1.0.8),
     fairqDbtools (>= 23.01.0),
     futile.logger (>= 1.4.3),
     ggplot2 (>= 3.3.6),
     Metrics,
     rlang (>= 1.0.2),
-    rjson (>= 0.2.21),
+    jsonlite (>= 1.8.7),
     timeDate (>= 3043.102),
     tidyselect (>= 1.1.2),
     R.utils,
-    xgboost (>= 1.6.0)
+    xgboost (>= 1.6.0),
+    lubridate(>= 1.9.0)
 Suggests: 
     INWTUtils (>= 1.1.0),
     lintr (>= 3.0.0),

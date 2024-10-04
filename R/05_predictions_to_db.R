@@ -90,7 +90,7 @@ add_model_id <- function(model_descr) {
     json_description = model_descr$description
   )
 
-  if (is.null(model_id_db[[1]])) {
+  if (any(is_empty(model_id_db) || is.null(model_id_db[[1]]))) {
     model_descr$model_id <-
       send_query("next_model_id", database = Sys.getenv("DB_SCHEMA_TARGET"))$model_id
     logging("Model is new, so a new ID is created (ID %s)",

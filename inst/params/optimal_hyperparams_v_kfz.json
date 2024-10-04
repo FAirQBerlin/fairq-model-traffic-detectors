@@ -1,0 +1,14 @@
+{
+  "nrounds": 117,
+  "max_depth": 10,
+  "eta": 0.125,
+  "gamma": 8.4744,
+  "colsample_bytree": 0.7687,
+  "min_child_weight": 12,
+  "subsample": 0.9979,
+  "nthread": 12,
+  "objective": "reg:squarederror",
+  "tree_method": "hist",
+  "device": "cuda",
+   "eval_metric": "rmse"
+}

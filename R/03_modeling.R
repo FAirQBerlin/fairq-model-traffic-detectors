@@ -10,10 +10,8 @@
 #' @export
 make_predictions <- function(model_object, dat, target_variable){
   feature_names <- labels(terms(model_formula(target_variable)))
-  dat <- xgb.DMatrix(data = as.matrix(as.data.frame(dat)[, feature_names]))
   predict(model_object, dat)
 }
-
 
 #' Latest model formula
 #'
@@ -70,86 +68,69 @@ model_formula <- function(target_variable) {
 random_hpo_grid <- function(tune_length) {
   grid <- data.frame(
     nrounds = 500,
-    max_depth = sample(7:10, replace = TRUE, size = tune_length),
-    eta = runif(tune_length, min = 0.001, max = 0.6),
-    gamma = runif(tune_length, min = 0, max = 10),
-    colsample_bytree = runif(tune_length,  min = 0.7, max = 1),
-    min_child_weight = sample(0:20, size = tune_length, replace = TRUE),
-    subsample = runif(tune_length, min = 0.7, max = 1)
+    max_depth = sample(7:7, replace = TRUE, size = tune_length),
+    eta = runif(tune_length, min = 0.15, max = 0.2),
+    gamma = runif(tune_length, min = 5, max = 10),
+    colsample_bytree = runif(tune_length,  min = 0.45, max = 0.55),
+    min_child_weight = sample(10:20, size = tune_length, replace = TRUE),
+    subsample = runif(tune_length, min = 0.5, max = 0.55),
+    lambda = runif(tune_length, min = 10, max = 20),
+    nthread = min(parallel::detectCores() - 1, 12),
+    objective = "reg:squarederror"
   )
   logging(grid)
   return(grid)
 }
 
-
-#' Optimal hyper parameters
-#'
-#' As identified using temporal CV
-#'
-#' @param target_variable (character) "q_kfz" for counted traffic of all
-#' vehicles volume/quantities, "v_kfz" for average traffic speed of all vehicles
-#'
-#' @return data frame with optimal hyper parameters
+#' @title Write data as DMatrix
+#' @description Uses `xgb.DMatrix` from the `xgboost` Package to transform data to the correct format
+#' @param dat Data to be rewritten
+#' @param features Features to be included
+#' @param target Targeted variable
 #' @export
-optimal_hyper_parameters <- function(target_variable) {
-  if (target_variable == "q_kfz") {
-    data.frame(
-      nrounds = 303,
-      max_depth = 9,
-      eta = 0.3048174,
-      gamma = 1.588561,
-      colsample_bytree = 0.8311579,
-      min_child_weight = 1,
-      subsample = 0.8877896
-    )
-  } else if (target_variable == "v_kfz") {
-    data.frame(
-      nrounds = 117,
-      max_depth = 10,
-      eta = 0.1250001,
-      gamma = 8.474384,
-      colsample_bytree = 0.7686541,
-      min_child_weight = 12,
-      subsample = 0.9978663
-    )
-  } else {
-    stop("target_variable needs to be either 'q_kfz' or 'v_kfz'")
-  }
+make_DMatrix <- function(dat, features, target) {
+  xgb.DMatrix(data = as.matrix(dat[, features, with = FALSE]),
+              label = dat[[target]]
+  )
 }
 
-
-#' Optimal lambdas
-#'
-#' As identified using temporal CV
-#'
-#' @param target_variable (character) "q_kfz" for counted traffic of all
-#' vehicles volume/quantities, "v_kfz" for average traffic speed of all vehicles
-#'
-#' @return integer with best lambda values, identified for the above hyper parameters
+#' @title Make Folds for CV
+#' @description Creates CV-Folds for usage in `xgb.cv`. The default can be changed to match your specific needs.
+#' @param dat_train Training Date you want to split in folds
+#' @param n_splits Number of splits
+#' @param n_weeks The time range shifting with every new split
 #' @export
-optimal_lambda <- function(target_variable) {
-  if (target_variable == "q_kfz") {
-    500000
-  } else if (target_variable == "v_kfz") {
-    5
-  } else {
-    stop("target_variable needs to be either 'q_kfz' or 'v_kfz'")
+folds <- function(dat_train, n_splits = 4, n_weeks = 12) {
+  result <- list()
+  split <- 0:(n_splits - 1)
+
+  for (num in split) {
+    max_date <- max(dat_train$date_time) - dweeks(n_weeks * (n_splits - num))
+    min_date <- min(dat_train$date_time) + dweeks(n_weeks * num)
+    train <- which(dat_train$date_time >= min_date & dat_train$date_time <= max_date)
+    test <- which(dat_train$date_time > max_date & dat_train$date_time <= max_date + dweeks(n_weeks))
+    single_split <- list(train = train, test = test)
+    result[[as.character(num)]] <- single_split
   }
+
+  return(result)
 }
 
-
-#' Get average number of unique detectors per hour
-#' @description For temporal CV we need the number of detectors per hour to multiply it with
-#' the window width etc.
-#' This number varies from hour to hour, however this won't affect the results very much so we
-#' just use the average number of detectors per hour.
-#' @param dat data.frame with columns date_time, x, and y
+#' @title Storing optimal set of HP
+#' @description Saves best set of HP as .json. It can be easily loaded from `inst/params`, where it is stored immediately after running the model.
+#' @param cv_results List containing sublists of all HP combinations
+#' @param target_variable Either "q_kfz" or "v_kfz"
 #' @export
-compute_avg_n_det <- function(dat) {
-  dat %>%
-    group_by(.data$date_time) %>%
-    summarise(n_dets = n_distinct(paste(.data$x, .data$y))) %>%
-    ungroup %>%
-    summarise(mean(.data$n_dets)) %>%
-    pull()
+best_hyperparams_to_json <- function(cv_results, target_variable) {
+  test_rmse_means <- sapply(cv_results, function(x) {
+    x$evaluation_log$test_rmse_mean[nrow(x$evaluation_log)]
+  })
+
+  optimal_hyperparams <- cv_results[[which.min(test_rmse_means)]]$params
+  optimal_hyperparams$silent <- NULL
+  optimal_hyperparams$nrounds <- cv_results[[which.min(test_rmse_means)]]$early_stop$best_iteration
+  optimal_hyperparams$rmse <- round(min(test_rmse_means), 2)
+
+  file_name <- paste0("inst/params/optimal_hyperparams_", target_variable, ".json")
+  write(jsonlite::toJSON(optimal_hyperparams, pretty = TRUE, auto_unbox = TRUE), file_name)
 }

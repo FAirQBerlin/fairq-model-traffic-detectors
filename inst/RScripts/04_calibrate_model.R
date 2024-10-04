@@ -20,31 +20,40 @@ library(xgboost)
 
 set.seed(364)
 
+args <- R.utils::commandArgs(
+  trailingOnly = TRUE,
+  asValues = TRUE,
+  defaults = list(TARGET_VARIABLE="q_kfz") # or v_kfz
+)
+target_variable <- args$TARGET_VARIABLE
+logging("calibrating model for target variable %s", target_variable)
+
 # Set variables ----
 # If DEV is TRUE, we work with a fraction of cases (= frac_if_dev)
-model_name <- "march_24"
+model_name <- format(Sys.Date(), "%y%m%d")
 DEV <- Sys.getenv("DEV")
 frac_if_dev <- 0.1
-# Which target variable should be modeled?
-# --> "q_kfz" for counted traffic of all vehicles volume/quantities
-# --> "v_kfz" for average traffic speed of all vehicles
-target_variable <- "q_kfz"
+formula <- model_formula(target_variable)
 
-# Get data ----
+logging("Getting data ----")
 dat <- get_data(target_variable, DEV, frac_if_dev)
 print(max(dat$date_time))
 
-# Train model ----
-xgb_fit <- train(
-  form = model_formula(target_variable),
-  data = dat,
-  method = "xgbTree",
-  tuneGrid = optimal_hyper_parameters(target_variable),
-  reg_lambda = optimal_lambda(target_variable),
-  # fit one model to the entire training set:
-  trControl = trainControl("none", predictionBounds = c(0, NA)),
-  verbose = TRUE,
-  nthread = detectCores() - 1
+# Extract features
+features <- labels(terms(formula))
+
+# Make as DMatrix
+ddat <- make_DMatrix(dat, features = features, target_variable)
+
+# Load optimal HP
+optimal_hyperparams <- jsonlite::fromJSON(sprintf("inst/params/optimal_hyperparams_%s.json", target_variable))
+
+logging("Training model ----")
+xgb_fit <- xgb.train(
+  params = optimal_hyperparams,
+  nrounds = optimal_hyperparams$nrounds,
+  data = ddat,
+  verbose = 1
 )
 
 # Save model results ----
@@ -58,7 +67,7 @@ model_filename <- paste0(file_prefix,
                                  ".xgb")
 
 # In-sample model performance
-pred <- make_predictions(xgb_fit$finalModel, dat, target_variable)
+pred <- make_predictions(xgb_fit, ddat, target_variable)
 rmse(dat[[target_variable]], pred)
 R2(pred, dat[[target_variable]], formula = "traditional")
 mae(dat[[target_variable]], pred)
@@ -77,7 +86,7 @@ model_id <- model_descr$model_id
 send_data(model_descr, "traffic_model_description", mode = "replace")
 
 if (DEV){ # save DEV models locally
-  xgb.save(xgb_fit$finalModel, file = model_filename)
+  xgb.save(xgb_fit, fname = model_filename)
 } else { # save model to DB
-  send_model_to_db(xgb_fit$finalModel, model_id, model_filename)
+  send_model_to_db(xgb_fit, model_id, model_filename)
 }
