@@ -125,7 +125,8 @@ preds_to_db <-
     dat <- send_query(query)
     gc()
     logging("Making predictions for %s observations.", nrow(dat))
-    dat$value <- make_predictions(xgb_fit, dat, target_variable)
+
+    dat$value <- make_predictions(dat, xgb_fit, target_variable)
     gc()
     dat <- prep_preds_for_db(dat, model_id = model_id)
     DEV <- Sys.getenv("DEV")
@@ -181,7 +182,7 @@ preds_chunkwise_to_db <-
       logging("Making predictions for chunk %s of %s",
               chunk_number,
               length(chunks))
-      dat_x$value <- make_predictions(xgb_fit, dat_x, target_variable)
+      dat_x$value <- make_predictions(dat_x, xgb_fit, target_variable)
       gc()
 
       dat_x <- prep_preds_for_db(dat_x, model_id = model_id)

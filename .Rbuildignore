@@ -1,6 +1,7 @@
 ^.+\.Rproj$
 ^\.Rproj\.user$
 ^reports$
+^inst/reports$
 ^kubernetes$
 ^\.dockerignore$
 ^Dockerfile$

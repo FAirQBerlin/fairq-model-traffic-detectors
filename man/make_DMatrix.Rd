@@ -4,7 +4,7 @@
 \alias{make_DMatrix}
 \title{Write data as DMatrix}
 \usage{
-make_DMatrix(dat, features, target)
+make_DMatrix(dat, features, target = NULL)
 }
 \arguments{
 \item{dat}{Data to be rewritten}

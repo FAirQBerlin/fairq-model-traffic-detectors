@@ -4,14 +4,46 @@
 #' @param model_object a single xgb model_object, e.g. xgb_fit$final model or
 #' an model object, retrieved from the database with retrieve_model_from_db()
 #' @param dat data frame with the features
+#' @param target_variable (character) "q_kfz" or v_kfz", NULL by default
+#'
+#' @return vector of predictions
+#' @export
+make_predictions <-function(dat, model_object, target_variable = NULL) UseMethod("make_predictions")
+
+#' Make predictions using a given model object
+#'
+#' @description Make predictions using a given model object, e.g., from the database
+#' @param model_object a single xgb model_object, e.g. xgb_fit$final model or
+#' an model object, retrieved from the database with retrieve_model_from_db()
+#' @param dat data frame with the features
 #' @param target_variable (character) "q_kfz" or v_kfz"
 #'
 #' @return vector of predictions
 #' @export
-make_predictions <- function(model_object, dat, target_variable){
+make_predictions.default <- function(dat, model_object, target_variable) {
+  logging("entering default predict method")
   feature_names <- labels(terms(model_formula(target_variable)))
+  if(!target_variable %in% colnames(dat)) target_variable = NULL
+  ddat <- make_DMatrix(dat, feature_names, target_variable)
+  predict(model_object, ddat)
+}
+
+
+#' Make predictions using a given model object with data already converted to xgb.Dmatrix
+#'
+#' @description Make predictions using a given model object, e.g., from the database
+#' @param model_object a single xgb model_object, e.g. xgb_fit$final model or
+#' an model object, retrieved from the database with retrieve_model_from_db()
+#' @param dat xgb.DMatrix
+#' @param target_variable other paramters passed to make_predictions
+#'
+#' @return vector of predictions
+#' @export
+make_predictions.xgb.DMatrix <- function(dat, model_object, target_variable) {
+  logging("entering xgb.DMatrix predict method")
   predict(model_object, dat)
 }
+
 
 #' Latest model formula
 #'
@@ -88,10 +120,14 @@ random_hpo_grid <- function(tune_length) {
 #' @param features Features to be included
 #' @param target Targeted variable
 #' @export
-make_DMatrix <- function(dat, features, target) {
-  xgb.DMatrix(data = as.matrix(dat[, features, with = FALSE]),
+make_DMatrix <- function(dat, features, target = NULL) {
+  if(is.null(target)) {
+    xgb.DMatrix(data = as.matrix(dat[, features, with = FALSE]))
+  } else {
+    xgb.DMatrix(data = as.matrix(dat[, features, with = FALSE]),
               label = dat[[target]]
-  )
+    )
+  }
 }
 
 #' @title Make Folds for CV

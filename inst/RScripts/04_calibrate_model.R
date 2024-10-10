@@ -69,7 +69,7 @@ model_filename <- paste0(file_prefix,
                                  ".xgb")
 
 # In-sample model performance
-pred <- make_predictions(xgb_fit, ddat, target_variable)
+pred <- make_predictions(dat, xgb_fit, target_variable)
 rmse(dat[[target_variable]], pred)
 R2(pred, dat[[target_variable]], formula = "traditional")
 mae(dat[[target_variable]], pred)
