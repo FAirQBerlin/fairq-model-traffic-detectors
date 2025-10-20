@@ -39,4 +39,6 @@ left join
 cross join
   features_date_time dt
 where year = 2019
-and x in ({{ x_coords }});
+and x in ({{ x_coords }})
+and (x, y) in (select x, y from traffic_volume where kfz_per_24h != 0)
+;

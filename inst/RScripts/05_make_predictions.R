@@ -65,7 +65,9 @@ if (actual_count != 24*36*360765 && # normal
 
 # Define model that will be used in pollutant model
 model_id_df <- data.frame(depvar = target_variable,
-                          model_id = model_id)
+                          model_id = model_id,
+                          preds_finished = FALSE,
+                          inserted_at = Sys.time())
 send_data(
   df = model_id_df,
   table = "traffic_models_final",
@@ -100,5 +102,15 @@ if (target_variable == "q_kfz") {
   }
 }
 
+model_id_df <- data.frame(depvar = target_variable,
+                          model_id = model_id,
+                          preds_finished = TRUE,
+                          inserted_at = Sys.time())
+send_data(
+  df = model_id_df,
+  table = "traffic_models_final",
+  mode = "replace",
+  database = Sys.getenv("DB_SCHEMA_SOURCE")
+)
 
 logging("Finished making predictions :-)")
