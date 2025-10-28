@@ -179,25 +179,32 @@ preds_chunkwise_to_db <-
       dat_x <- send_query(query, x_coords = x, start_time = start_time)
       gc()
 
-      logging("Making predictions for chunk %s of %s",
-              chunk_number,
-              length(chunks))
-      dat_x$value <- make_predictions(dat_x, xgb_fit, target_variable)
-      gc()
+      if (length(dat_x) == 0) {
+        logging("No data for chunk %s of %s, skipping",
+                chunk_number,
+                length(chunks))
+        chunk_number <- chunk_number + 1
+      } else {
+        logging("Making predictions for chunk %s of %s",
+                chunk_number,
+                length(chunks))
+        dat_x$value <- make_predictions(dat_x, xgb_fit, target_variable)
+        gc()
 
-      dat_x <- prep_preds_for_db(dat_x, model_id = model_id)
+        dat_x <- prep_preds_for_db(dat_x, model_id = model_id)
 
-      DEV <- Sys.getenv("DEV")
-      if (!as.logical(DEV)) {
-        # Use mode insert now and optimize table only once at the end
-        send_data(
-          df = dat_x,
-          table = table_name,
-          database = Sys.getenv("DB_SCHEMA_SOURCE"),
-          mode = "insert"
-        )
+        DEV <- Sys.getenv("DEV")
+        if (!as.logical(DEV)) {
+          # Use mode insert now and optimize table only once at the end
+          send_data(
+            df = dat_x,
+            table = table_name,
+            database = Sys.getenv("DB_SCHEMA_SOURCE"),
+            mode = "insert"
+          )
+        }
+        chunk_number <- chunk_number + 1
       }
-      chunk_number <- chunk_number + 1
     }
 
     rm(dat_x)
