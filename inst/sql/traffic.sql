@@ -2,12 +2,13 @@ with det_observations as (
 select
   mq_name,
   date_time,
-  q_kfz_mq_hr,
-  v_kfz_mq_hr,
+  any(q_kfz_mq_hr) q_kfz_mq_hr,
+  any(v_kfz_mq_hr) v_kfz_mq_hr,
   x det_x,
   y det_y
 from
-  traffic_det
+  traffic_all_observations
+group by mq_name, date_time, x, y
 )
 select
   det.mq_name mq_name,

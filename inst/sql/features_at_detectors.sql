@@ -30,7 +30,7 @@ from
   coord_stadt_berlin stadt
 -- Spatial features
 inner join
-  coord_mapping_stadt_det on (stadt.x = stadt_x and stadt.y = stadt_y)
+  (select * from coord_mapping_stadt_det where mq_name like 'TC%') cmsd on (stadt.x = stadt_x and stadt.y = stadt_y)
 left join
   streets str on (stadt.x = streets.x and stadt.y = streets.y)
 left join
