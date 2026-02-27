@@ -9,10 +9,10 @@ sessionInfo()
 args <- R.utils::commandArgs(
   trailingOnly = TRUE,
   asValues = TRUE,
-  defaults = list(TARGET_VARIABLE="q_kfz") # or v_kfz
+  defaults = list(TARGET_VARIABLE = "q_kfz") # or v_kfz
 )
 target_variable <- args$TARGET_VARIABLE
-model_id = get_latest_model_id(target_variable)
+model_id <- get_latest_model_id(target_variable)
 
 logging("Start making predictions with model_id=%s and target_variable=%s", model_id, target_variable)
 
@@ -75,30 +75,29 @@ send_data(
   database = Sys.getenv("DB_SCHEMA_SOURCE")
 )
 
-## d.) Predictions on whole grid for 2019 - we need them to compute the scaling factors based on the
+## d.) Predictions on whole grid for 2023 - we need them to compute the scaling factors based on the
 ## traffic volume
 # Caution: Consumes a lot of working memory, better run it on VM or choose chunk_size 1
 if (target_variable == "q_kfz") {
-  send_query("truncate table traffic_model_predictions_2019;")
+  send_query("truncate table traffic_model_predictions_2023;")
   preds_chunkwise_to_db(
     chunk_size = 3,
-    query = "features_on_grid_2019",
+    query = "features_on_grid_2023",
     xgb_fit = xgb_fit_final,
     target_variable = target_variable,
     model_id = model_id,
-    table_name = "traffic_model_predictions_2019"
+    table_name = "traffic_model_predictions_2023"
   )
 
-  # Update scaling factors based on the new predictions for 2019
-  pred_2019_in_db <-
-    send_query("check_2019_preds_arrived_in_db")
-  if (!as.logical(pred_2019_in_db$all_preds_arrived)) {
-    stop("It seems that not all 2019 predictions have arrived correctly in the DB.")
+  # Update scaling factors based on the new predictions for 2023
+  pred_2023_in_db <-
+    send_query("check_2023_preds_arrived_in_db")
+  if (!as.logical(pred_2023_in_db$all_preds_arrived)) {
+    stop("It seems that not all 2023 predictions have arrived correctly in the DB.")
   } else {
     send_query("update_scaling_factors")
-    optimize_table_final("traffic_model_scaling",
-                         database = Sys.getenv("DB_SCHEMA_SOURCE"))
-    send_query("truncate table traffic_model_predictions_2019;")
+    optimize_table_final("traffic_model_scaling", database = Sys.getenv("DB_SCHEMA_SOURCE"))
+    send_query("truncate table traffic_model_predictions_2023;")
   }
 }
 

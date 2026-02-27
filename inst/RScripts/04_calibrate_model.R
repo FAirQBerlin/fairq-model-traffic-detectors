@@ -6,9 +6,7 @@
 
 rm(list = ls(all.names = TRUE))
 
-# Make sure to have latest package version installed:
-# devtools::document()
-# devtools::install()
+# Make sure to have latest package version installed
 
 library(caret)
 library(dplyr)
@@ -25,7 +23,7 @@ set.seed(9127364)
 args <- R.utils::commandArgs(
   trailingOnly = TRUE,
   asValues = TRUE,
-  defaults = list(TARGET_VARIABLE="q_kfz") # or v_kfz
+  defaults = list(TARGET_VARIABLE = "q_kfz") # or v_kfz
 )
 target_variable <- args$TARGET_VARIABLE
 logging("calibrating model for target variable %s", target_variable)
@@ -64,9 +62,9 @@ xgb_fit <- xgb.train(
 file_prefix <- paste0(format(Sys.Date(), "%y%m%d"), "_", target_variable)
 file_suffix <- if (DEV) "_dev" else ""
 model_filename <- paste0(file_prefix,
-                                 "traffic_model_full_period",
-                                 file_suffix,
-                                 ".xgb")
+                         "traffic_model_full_period",
+                          file_suffix,
+                          ".xgb")
 
 # In-sample model performance
 pred <- make_predictions(dat, xgb_fit, target_variable)
@@ -88,7 +86,7 @@ model_id <- model_descr$model_id
 send_data(model_descr, "traffic_model_description", mode = "replace")
 logging("Model description sent to DB for model_id %s", model_id)
 
-if (DEV){ # save DEV models locally
+if (DEV) { # save DEV models locally
   xgb.save(xgb_fit, fname = model_filename)
   logging("Model saved locally with filename %s", model_filename)
 } else { # save model to DB
