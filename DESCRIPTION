@@ -1,6 +1,6 @@
 Package: fairqModelTrafficDetectors
 Title: Predict traffic
-Version: 26.02.2
+Version: 26.04.0
 Authors@R: 
     person("Mira Celine", "Klein", , "mira.klein@inwt-statistics.de", role = c("aut", "cre"))
 Description: Predict traffic intensity using data by traffic detectors.
