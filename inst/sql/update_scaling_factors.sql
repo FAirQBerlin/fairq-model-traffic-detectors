@@ -6,7 +6,7 @@ with predicted_averages as (
     y,
     avg(value) * 24 as kfz_per_24h_pred
   from
-    traffic_model_predictions_2019
+    traffic_model_predictions_2023
   group by x, y
 ),
 
