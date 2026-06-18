@@ -1,14 +1,38 @@
-with det_observations as (
+with street_obs as
+(
+select
+  mq_prime,
+  date_time,
+  sum(q_kfz_mq_hr) q_kfz_mq_hr,
+  avg(v_kfz_mq_hr) v_kfz_mq_hr,
+  max(one_way_street) as one_way_street,
+  countDistinct(mq_name) as n_present
+from
+  traffic_all_observations final
+inner join
+  det_pairs using(mq_name)
+where mq_name in (select mq_name from det_pairs where valid = 1)
+group by mq_prime, date_time
+having
+	(one_way_street = 1 and n_present >= 1)
+	or
+	(one_way_street = 0 and n_present >= 2)
+),
+det_observations as
+(
 select
   mq_name,
   date_time,
-  any(q_kfz_mq_hr) q_kfz_mq_hr,
-  any(v_kfz_mq_hr) v_kfz_mq_hr,
+  q_kfz_mq_hr,
+  v_kfz_mq_hr,
   x det_x,
   y det_y
 from
-  traffic_all_observations
-group by mq_name, date_time, x, y
+  (select distinct mq_name, date_time, x, y from traffic_all_observations where x > 20000) dtao
+inner join
+  det_pairs using(mq_name)
+inner join
+  street_obs using(mq_prime, date_time)
 )
 select
   det.mq_name mq_name,

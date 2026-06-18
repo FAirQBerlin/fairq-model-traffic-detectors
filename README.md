@@ -56,8 +56,8 @@ Traffic data arrives monthly as a csv file on https://api.viz.berlin.de/daten/ve
   - a.) Predictions at detectors in the future -> model evaluation
   - b.) Predictions at pollutant measurement stations for entire past -> training of pollutant model
   - c.) Predictions on entire Berlin grid in the future -> input for pollutant model predictions
-  - d.) Predictions on entire Berlin grid for year 2019 and based on that, calculation of rescaling factors using traffic volume map
-3. Calculate new predictions for vehicle speed on dev using script https://github.com/fairqBerlin/fairq-model-traffic-detectors/blob/public/inst/RScripts/04_calibrate_model_and_make_predictions.R (predictions for 2019 are not created for speed because we don't need rescaling for it)
+  - d.) Predictions on entire Berlin grid for year 2023 and based on that, calculation of rescaling factors using traffic volume map
+3. Calculate new predictions for vehicle speed on dev using script https://github.com/fairqBerlin/fairq-model-traffic-detectors/blob/public/inst/RScripts/04_calibrate_model_and_make_predictions.R (predictions for 2023 are not created for speed because we don't need rescaling for it)
 4. Retrigger Kubernetes job for pollutant model training (dev)
 5. Transfer traffic model predictions to prod using `inst/R_Code/07_move_data_dev_prod` after checking that it's working on dev
 6. Retrigger Kubernetes job for pollutant model training (prod)

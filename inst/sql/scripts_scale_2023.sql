@@ -5,6 +5,8 @@ with predicted_averages as (
     avg(value) * 24 as kfz_per_24h_pred
   from
     traffic_model_predictions_2023
+    where toYear(date_time) == 2024
+    and model_id == 75
   group by x, y
 ),
 year_avgs as (

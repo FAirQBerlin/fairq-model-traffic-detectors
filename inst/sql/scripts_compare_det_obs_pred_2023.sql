@@ -9,18 +9,17 @@ with obs as (
   traffic_all_observations tdo
   inner join
   coord_mapping_stadt_det on (tdo.x = det_x and  tdo.y = det_y)
-  where toYear(date_time) = 2023
+  where toYear(date_time) in (2023, 2024)
 )
 select
--- model_id,
 mq_name,
 x,
 y,
 date_time,
 value as pred,
 q_kfz_mq_hr as obs
-from
-traffic_model_predictions_2023
-inner join
-obs using(x, y, date_time)
-where (x, y) in (select stadt_x, stadt_y from coord_mapping_stadt_det)
+from traffic_model_predictions_2023
+inner join obs using(x, y, date_time)
+where model_id = '75'
+  and toYear(date_time) in (2023, 2024)
+  and (x, y) in (select stadt_x, stadt_y from coord_mapping_stadt_det)

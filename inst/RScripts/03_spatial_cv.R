@@ -29,6 +29,7 @@ target_variable <- "q_kfz"
 
 # Get data ----
 dat <- get_data(target_variable, DEV, frac_if_dev)
+dat$q_kfz <- as.numeric(dat$q_kfz) # Clickhouse turns sum values into i64
 scaling_factors <- send_query("scaling_factors_at_detectors")
 formula <- model_formula(target_variable)
 features <- labels(terms(formula))
@@ -43,7 +44,6 @@ dat <- dat %>%
   left_join(scaling_factors, by = c("x", "y"))
 
 optimal_hyperparams <- jsonlite::fromJSON(sprintf("inst/params/optimal_hyperparams_%s.json", target_variable))
-# optimal_hyperparams$nrounds <- NULL
 
 result_list <- lapply(1:n_splits,
                       function(id) {
@@ -56,11 +56,17 @@ result_list <- lapply(1:n_splits,
                         dtrain <- make_DMatrix(dat_train, features, target_variable)
                         dtest <- make_DMatrix(dat_test, features, target_variable)
 
+                        watchlist <- list(train = dtrain, eval = dtest)
+
+                        nrounds <- optimal_hyperparams$nrounds
+                        optimal_hyperparams$nrounds <- NULL
+
                         # Train model
                         xgb_fit <- xgb.train(
                           params = optimal_hyperparams,
-                          nrounds = optimal_hyperparams$nrounds,
+                          nrounds = nrounds,
                           data = dtrain,
+                          watchlist = watchlist,
                           verbose = 1,
                           early_stopping_rounds = 20
                         )
@@ -80,9 +86,9 @@ save(file = "pred_cv.Rdata", result_list)
 dat_test_combined <- bind_rows(result_list)
 
 if (target_variable ==  "q_kfz") {
-  # Multiply by scaling factor and divide by 2 to have a one-direction prediction
+  # Multiply by scaling factor.
   dat_test_combined <-
-    dat_test_combined %>% mutate(pred = pred * scaling / 2)
+    dat_test_combined %>% mutate(pred = pred * scaling)
 }
 
 plot_pred_vs_obs(target_variable, dat_test_combined) + facet_grid(group ~ .)

@@ -69,7 +69,7 @@ model_filename <- paste0(file_prefix,
 # In-sample model performance
 pred <- make_predictions(dat, xgb_fit, target_variable)
 rmse(dat[[target_variable]], pred)
-R2(pred, dat[[target_variable]], formula = "traditional")
+R2(pred, as.numeric(dat[[target_variable]]), formula = "traditional")
 mae(dat[[target_variable]], pred)
 
 # Write predictions to DB ----

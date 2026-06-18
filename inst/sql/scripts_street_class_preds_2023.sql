@@ -4,6 +4,8 @@ WITH predicted_averages AS (
     y,
     avg(value) * 24 as kfz_per_24h_pred
   FROM traffic_model_predictions_2023
+  where model_id == 75
+  and toYear(date_time) == 2023
   GROUP BY x, y
 )
 SELECT

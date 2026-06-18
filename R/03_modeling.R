@@ -54,7 +54,7 @@ make_predictions.xgb.DMatrix <- function(dat, model_object, target_variable) {
 #' @export
 model_formula <- function(target_variable) {
   if (target_variable == "q_kfz") {
-    q_kfz ~ x + y + year + day_of_week + day_of_year + hour + winter_time +
+    q_kfz ~ year + day_of_week + day_of_year + hour + winter_time +
       # holidays:
       summer_holidays + other_school_holidays + is_public_holiday +
       # amount of street classes in cell:
@@ -67,7 +67,7 @@ model_formula <- function(target_variable) {
       traffic_volume
   }
   else if (target_variable == "v_kfz") {
-    v_kfz ~ x + y + year + day_of_week + day_of_year + hour + winter_time +
+    v_kfz ~ year + day_of_week + day_of_year + hour + winter_time +
       # holidays:
       summer_holidays + other_school_holidays + is_public_holiday +
       # amount of street classes in cell:
